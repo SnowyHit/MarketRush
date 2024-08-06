@@ -73,8 +73,8 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
         	float UsingSlowTurnRate = SlowTurnRate ;
         	if(CurrentVelocityMagnitude < 0.3f)
         	{
-        		UsingFastTurnRate = FastTurnRate * 2;
-        		UsingSlowTurnRate = SlowTurnRate * 2;
+        		UsingFastTurnRate = FastTurnRate * 1.5;
+        		UsingSlowTurnRate = SlowTurnRate * 1.5;
         	}
         	FVector TorqueToAdd = FVector(0, 0, SteeringInput * (bIsFastMode ? UsingFastTurnRate : UsingSlowTurnRate) * DeltaTime);
 		    
