@@ -30,6 +30,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float FastTurnRate;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	float MaxVelocityFast;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	float MaxVelocitySlow;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	float MaxAngularVelocityFast;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	float MaxAngularVelocitySlow;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	bool bIsFastMode;
 };
