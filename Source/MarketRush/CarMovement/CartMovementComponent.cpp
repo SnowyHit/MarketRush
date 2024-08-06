@@ -13,12 +13,12 @@ UCartMovementComponent::UCartMovementComponent()
 
 	MaxVelocityFast = 400.0f;
 	MaxVelocitySlow = 250.0f;
-	MaxAngularVelocityFast = 200.0f;
-	MaxAngularVelocitySlow = 100.0f;
+	MaxAngularVelocityFast = 5.0f;
+	MaxAngularVelocitySlow = 5.0f;
 	SlowSpeed = 60000.0f;
 	FastSpeed = 120000.0f;
-	SlowTurnRate = 500.0f;
-	FastTurnRate = 250.0f;
+	SlowTurnRate = 400.0f;
+	FastTurnRate = 200.0f;
 	bIsFastMode = false;
 	// ...
 }
@@ -81,9 +81,6 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
         	PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
         	PrimitiveComponent->SetPhysicsMaxAngularVelocityInRadians((bIsFastMode ? MaxAngularVelocityFast : MaxAngularVelocitySlow));
 
-            // Debugging the component's physics state
-            UE_LOG(LogTemp, Warning, TEXT("Component Velocity: %s"), *PrimitiveComponent->GetComponentVelocity().ToString());
-        	UE_LOG(LogTemp, Warning, TEXT("Current Velocity Magnitude: %f"), CurrentVelocityMagnitude);
 
         }
     }
