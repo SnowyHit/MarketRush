@@ -35,8 +35,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* SwitchModeAction;
 
 protected:
 	virtual void BeginPlay() override;
@@ -44,8 +42,6 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	void Move(const FInputActionValue& Value);
-	UFUNCTION(BlueprintImplementableEvent)
-	void SwitchMode();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };

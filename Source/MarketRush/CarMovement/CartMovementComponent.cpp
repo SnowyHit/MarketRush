@@ -11,15 +11,9 @@ UCartMovementComponent::UCartMovementComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	MaxVelocityFast = 400.0f;
-	MaxVelocitySlow = 250.0f;
-	MaxAngularVelocityFast = 5.0f;
-	MaxAngularVelocitySlow = 5.0f;
-	SlowSpeed = 60000.0f;
-	FastSpeed = 120000.0f;
-	SlowTurnRate = 400.0f;
-	FastTurnRate = 200.0f;
-	bIsFastMode = false;
+	MaxVelocity = 400.0f;
+	Speed = 60000.0f;
+	TurnRate = 200.0f;
 	// ...
 }
 
@@ -38,59 +32,48 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	bool bIsMovingForward = true;
 	if (!CurrentInputVector.IsNearlyZero())
     {
-        float CurrentSpeed = bIsFastMode ? FastSpeed : SlowSpeed;
+        float CurrentSpeed = Speed;
         FVector ForwardVector = UpdatedComponent->GetForwardVector();
 
         // Calculate the force to apply
-        FVector ForceToAdd = ForwardVector * CurrentInputVector.X * CurrentSpeed * DeltaTime;
+        FVector ForceToAdd = ForwardVector * CurrentInputVector.X * CurrentSpeed * DeltaTime * 100;
 		
 
         if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
         {
-        	float CurrentVelocityMagnitude = FVector::DotProduct(PrimitiveComponent->GetComponentVelocity(), ForwardVector);
-        	
+        	float CurrentVelocityMagnitude = FMath::Abs(FVector::DotProduct(PrimitiveComponent->GetComponentVelocity(), ForwardVector));
+
         	// Limit the velocity if necessary
-        	if (CurrentVelocityMagnitude > (bIsFastMode ? MaxVelocityFast : MaxVelocitySlow))
+        	if (CurrentVelocityMagnitude > MaxVelocity)
         	{
         		// Calculate the scaling factor to ensure max velocity
-        		float ScalingFactor = (bIsFastMode ? MaxVelocityFast : MaxVelocitySlow) / CurrentVelocityMagnitude;
+        		float ScalingFactor = MaxVelocity / CurrentVelocityMagnitude;
         		ForceToAdd *= ScalingFactor;
         	}
+        	
+        	bIsMovingForward = CurrentInputVector.X >= 0;
+			if(!bIsMovingForward)
+			{
+				ForceToAdd*=0.3;
+			}
             // Apply force to the root component
             PrimitiveComponent->AddForce(ForceToAdd, NAME_None, true);
 
             // Determine movement direction
-            bIsMovingForward = CurrentInputVector.X >= 0;
+            
 
             // Adjust steering input
             float SteeringInput = CurrentInputVector.Y;
-            if (!bIsMovingForward)
-            {
-                SteeringInput = -CurrentInputVector.Y; // Reverse steering if moving backwards
-            }
-        	// Apply torque for turning
-        	float UsingFastTurnRate = FastTurnRate ;
-        	float UsingSlowTurnRate = SlowTurnRate ;
-        	if(CurrentVelocityMagnitude < 0.3f)
-        	{
-        		UsingFastTurnRate = FastTurnRate * 1.5;
-        		UsingSlowTurnRate = SlowTurnRate * 1.5;
-        	}
-        	FVector TorqueToAdd = FVector(0, 0, SteeringInput * (bIsFastMode ? UsingFastTurnRate : UsingSlowTurnRate) * DeltaTime);
+        	
+        	FVector TorqueToAdd = FVector(0, 0, SteeringInput * TurnRate * DeltaTime);
 		    
         	PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
-        	PrimitiveComponent->SetPhysicsMaxAngularVelocityInRadians((bIsFastMode ? MaxAngularVelocityFast : MaxAngularVelocitySlow));
 
 
         }
     }
 	
 	ConsumeInputVector();
-}
-
-void UCartMovementComponent::SetMovementMode(bool isFastMode)
-{
-	bIsFastMode = isFastMode;
 }
 
 

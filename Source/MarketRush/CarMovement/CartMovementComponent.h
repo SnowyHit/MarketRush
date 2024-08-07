@@ -16,28 +16,11 @@ public:
 	UCartMovementComponent();
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	void SetMovementMode(bool bIsFastMode);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float SlowSpeed;
-
+	float Speed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float FastSpeed;
-
+	float TurnRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float SlowTurnRate;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float FastTurnRate;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float MaxVelocityFast;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float MaxVelocitySlow;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float MaxAngularVelocityFast;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	float MaxAngularVelocitySlow;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	bool bIsFastMode;
+	float MaxVelocity;
 };

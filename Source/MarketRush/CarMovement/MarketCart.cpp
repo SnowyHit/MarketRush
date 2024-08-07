@@ -86,7 +86,6 @@ void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMarketCart::Move);
-		EnhancedInputComponent->BindAction(SwitchModeAction, ETriggerEvent::Started, this, &AMarketCart::SwitchMode);
 	}
 }
 
