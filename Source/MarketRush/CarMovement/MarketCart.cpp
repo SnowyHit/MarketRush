@@ -22,6 +22,15 @@ AMarketCart::AMarketCart()
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
 	RootComponent = CollisionComp;
 	
+	FRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FR Wheel"));
+	FLWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FL Wheel"));
+	BRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("BR Wheel"));
+	BLWheel = CreateDefaultSubobject<USphereComponent>(TEXT("BL Wheel"));
+	FRWheel->SetupAttachment(RootComponent);
+	FLWheel->SetupAttachment(RootComponent);
+	BRWheel->SetupAttachment(RootComponent);
+	BLWheel->SetupAttachment(RootComponent);
+	
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -38,7 +47,6 @@ AMarketCart::AMarketCart()
 void AMarketCart::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -69,6 +77,14 @@ void AMarketCart::Move(const FInputActionValue& Value)
 	}
 }
 
+void AMarketCart::Boost(const FInputActionValue& Value)
+{
+	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
+	{
+		CartMovement->StartBoost();
+	}
+}
+
 // Called to bind functionality to input
 void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -86,6 +102,7 @@ void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMarketCart::Move);
+		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Triggered, this, &AMarketCart::Boost);
 	}
 }
 

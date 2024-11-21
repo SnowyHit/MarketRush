@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Pawn.h"
 #include "MarketCart.generated.h"
 
@@ -26,6 +27,14 @@ public:
 	
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionComp;
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* FRWheel;
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* FLWheel;
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* BRWheel;
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* BLWheel;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
@@ -35,13 +44,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* BoostAction;
 
 protected:
 	virtual void BeginPlay() override;
 
+
 public:
 	virtual void Tick(float DeltaTime) override;
 	void Move(const FInputActionValue& Value);
+	void Boost(const FInputActionValue& Value);
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };

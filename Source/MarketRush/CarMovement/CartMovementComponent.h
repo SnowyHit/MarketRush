@@ -23,4 +23,22 @@ public:
 	float TurnRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float MaxVelocity;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boost")
+	float BoostSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boost")
+	float BoostCooldown;
+
+	// Boost state
+	bool bIsBoosting;
+	bool bCanBoost;
+
+	// Boost functions
+	void StartBoost();
+
+private:
+	// Timer handles for managing boost state
+	FTimerHandle BoostDurationTimerHandle;
+	FTimerHandle BoostCooldownTimerHandle;
+
+	void ResetBoostCooldown();
 };
