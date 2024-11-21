@@ -84,6 +84,20 @@ void AMarketCart::Boost(const FInputActionValue& Value)
 		CartMovement->StartBoost();
 	}
 }
+void AMarketCart::StartSlowDown(const FInputActionValue& Value)
+{
+	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
+	{
+		CartMovement->StartSlowDown();
+	}
+}
+void AMarketCart::EndSlowDown(const FInputActionValue& Value)
+{
+	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
+	{
+		CartMovement->StopSlowDown();
+	}
+}
 
 // Called to bind functionality to input
 void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -103,6 +117,9 @@ void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMarketCart::Move);
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Triggered, this, &AMarketCart::Boost);
+		EnhancedInputComponent->BindAction(SlowDownAction, ETriggerEvent::Triggered, this, &AMarketCart::StartSlowDown);
+		EnhancedInputComponent->BindAction(SlowDownAction, ETriggerEvent::Completed, this, &AMarketCart::EndSlowDown);
 	}
 }
+
 

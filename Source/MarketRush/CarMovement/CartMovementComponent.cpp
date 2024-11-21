@@ -10,13 +10,15 @@ UCartMovementComponent::UCartMovementComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	BoostSpeed = 2000.f;
-	BoostCooldown = 2.0f;
 	bIsBoosting = false;
 	bCanBoost = true;
 	MaxVelocity = 400.0f;
 	Speed = 60000.0f;
-	TurnRate = 200.0f;
+	TurnRate = 1000.0f;
+	SlowDownFactor = 20.0f;
+	BoostSpeed = 500.0f;
+	BoostCooldown = 0.5f;// Reduce velocity to 50%
+	bIsSlowingDown = false;
 	// ...
 }
 
@@ -30,6 +32,39 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	if (!PawnOwner || !UpdatedComponent)
 	{
 		return;
+	}
+	
+	if (bIsSlowingDown)
+	{
+		if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
+		{
+			FVector CurrentVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
+	    
+			// Apply a friction-like force only if the cart is moving
+			if (!CurrentVelocity.IsNearlyZero())
+			{
+				FVector CurrentVel = PrimitiveComponent->GetPhysicsLinearVelocity();
+				SlowDownFactor = FMath::Clamp(SlowDownFactor, 0.0f, 1.0f);
+				FVector Deceleration = CurrentVel * SlowDownFactor * DeltaTime; // Gradual slowdown
+    
+				// Apply deceleration, ensuring the cart doesn't reverse direction suddenly
+				FVector NewVelocity = CurrentVel - Deceleration;
+    
+				// Apply the new velocity back to the cart
+				PrimitiveComponent->SetPhysicsLinearVelocity(NewVelocity, false);
+			}
+			else
+			{
+				FVector ForwardVector = UpdatedComponent->GetForwardVector();
+            
+				// Apply a small reverse force along the cart's forward direction (opposite of forward)
+				FVector ReverseForce = -ForwardVector * ReverseSpeed;  // Apply reverse in the direction opposite to forward
+            
+				// Apply the reverse force to the cart
+				PrimitiveComponent->AddForce(ReverseForce, NAME_None, false);
+			}
+		}
+		
 	}
 	auto CurrentInputVector = GetPendingInputVector().GetClampedToMaxSize(1.f);
 	if (!CurrentInputVector.IsNearlyZero())
@@ -103,6 +138,15 @@ void UCartMovementComponent::ResetBoostCooldown()
 {
 	bIsBoosting = false; // Reset the boost state
 	bCanBoost = true; 
+}
+void UCartMovementComponent::StartSlowDown()
+{
+	bIsSlowingDown = true;
+}
+
+void UCartMovementComponent::StopSlowDown()
+{
+	bIsSlowingDown = false;
 }
 
 

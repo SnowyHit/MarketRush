@@ -47,6 +47,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* BoostAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SlowDownAction;
 
 protected:
 	virtual void BeginPlay() override;
@@ -56,6 +58,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void Move(const FInputActionValue& Value);
 	void Boost(const FInputActionValue& Value);
+	void StartSlowDown(const FInputActionValue& Value);
+	void EndSlowDown(const FInputActionValue& Value);
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };
