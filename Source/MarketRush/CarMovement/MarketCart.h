@@ -48,6 +48,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* BoostAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReverseBoostAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SlowDownAction;
 
 protected:
@@ -58,6 +62,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void Move(const FInputActionValue& Value);
 	void Boost(const FInputActionValue& Value);
+	void Jump(const FInputActionValue& Value);
+	void ReverseBoost(const FInputActionValue& Value);
 	void StartSlowDown(const FInputActionValue& Value);
 	void EndSlowDown(const FInputActionValue& Value);
 

@@ -21,7 +21,6 @@ AMarketCart::AMarketCart()
 	
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
 	RootComponent = CollisionComp;
-	
 	FRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FR Wheel"));
 	FLWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FL Wheel"));
 	BRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("BR Wheel"));
@@ -81,7 +80,21 @@ void AMarketCart::Boost(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->StartBoost();
+		CartMovement->StartBoost(false);
+	}
+}
+void AMarketCart::Jump(const FInputActionValue& Value)
+{
+	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
+	{
+		CartMovement->RaiseFrontWheels();
+	}
+}
+void AMarketCart::ReverseBoost(const FInputActionValue& Value)
+{
+	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
+	{
+		CartMovement->StartBoost(true);
 	}
 }
 void AMarketCart::StartSlowDown(const FInputActionValue& Value)
@@ -117,6 +130,8 @@ void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMarketCart::Move);
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Triggered, this, &AMarketCart::Boost);
+		EnhancedInputComponent->BindAction(ReverseBoostAction, ETriggerEvent::Triggered, this, &AMarketCart::ReverseBoost);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMarketCart::Jump);
 		EnhancedInputComponent->BindAction(SlowDownAction, ETriggerEvent::Triggered, this, &AMarketCart::StartSlowDown);
 		EnhancedInputComponent->BindAction(SlowDownAction, ETriggerEvent::Completed, this, &AMarketCart::EndSlowDown);
 	}
