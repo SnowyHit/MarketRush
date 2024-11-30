@@ -88,17 +88,25 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		auto CurrentInputVector = GetPendingInputVector().GetClampedToMaxSize(1.f);
 		if (!CurrentInputVector.IsNearlyZero() && CurrentState != ECartState::Toppled)
 		{
-			float SteeringInput = CurrentInputVector.Y;
-			
-			FVector TorqueToAdd = FVector(0, 0, SteeringInput * TurnRate * DeltaTime);
-			if (CurrentVelocity.IsNearlyZero(100.0f))
+			if(!bIsSlowingDown)
 			{
-				TorqueToAdd *= 100;
+				float SteeringInput = CurrentInputVector.Y;
+			
+				FVector TorqueToAdd = FVector(0, 0, SteeringInput * TurnRate * DeltaTime);
+				if (CurrentVelocity.IsNearlyZero(100.0f))
+				{
+					TorqueToAdd *= 100;
+				}
+			
+				PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
 			}
 			
-			PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
-			
 		}
+		// Update animation variables
+		AnimData.Speed = CurrentVelocity.Size();
+		// Calculate turn intensity based on input
+		FVector InputVector = GetPendingInputVector();
+		AnimData.TurnIntensity = InputVector.Y;
     }
 	
 	ConsumeInputVector();
@@ -261,6 +269,8 @@ void UCartMovementComponent::StartBoost(bool IsReversed)
 			Impulse /= 2;
 		}// BoostSpeed is now treated as the impulse magnitude
 		PrimitiveComponent->AddImpulse(Impulse, NAME_None, true);
+		
+		AnimData.bIsPushing = true;
 	}
 
 	// Set a timer to reset the boost state
@@ -274,17 +284,25 @@ void UCartMovementComponent::StartBoost(bool IsReversed)
 
 void UCartMovementComponent::ResetBoostCooldown()
 {
-	bIsBoosting = false; // Reset the boost state
-	bCanBoost = true; 
+	bIsBoosting = false;// Reset the boost state
+	bCanBoost = true;
+	AnimData.bIsPushing = false;
 }
 void UCartMovementComponent::StartSlowDown()
 {
 	bIsSlowingDown = true;
+	AnimData.bIsSlowingDown = true;
 }
 
 void UCartMovementComponent::StopSlowDown()
 {
 	bIsSlowingDown = false;
+	AnimData.bIsSlowingDown = false;
+}
+
+void UCartMovementComponent::SetPushingAnimationToFalse()
+{
+	AnimData.bIsPushing = false;
 }
 
 

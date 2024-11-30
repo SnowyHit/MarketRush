@@ -5,7 +5,28 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "CartMovementComponent.generated.h"
+USTRUCT(BlueprintType)
+struct FCartAnimData
+{
+	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsPushing;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	float TurnIntensity;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	float Speed;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsSlowingDown;
+
+	FCartAnimData()
+		: bIsPushing(false), TurnIntensity(0.0f), Speed(0.0f), bIsSlowingDown(false)
+	{}
+};
+	
 UENUM(BlueprintType)
 enum class ECartState : uint8
 {
@@ -38,6 +59,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float TurnRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	FCartAnimData AnimData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float MaxVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float BoostSpeed;
@@ -58,11 +81,14 @@ public:
 	double MaxRoll;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	ECartState CurrentState;
+	bool bIsReversedPush;
 
 	// Boost functions
 	void StartBoost(bool IsReversed);
 	void StartSlowDown();
 	void StopSlowDown();
+	UFUNCTION(BlueprintCallable)
+	void SetPushingAnimationToFalse();
 
 private:
 	// Timer handles for managing boost state
