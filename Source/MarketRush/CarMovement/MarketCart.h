@@ -24,6 +24,8 @@ public:
 	AMarketCart();
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* CharacterVisual;
 	
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionComp;

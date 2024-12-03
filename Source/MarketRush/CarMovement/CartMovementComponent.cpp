@@ -2,7 +2,6 @@
 
 
 #include "CartMovementComponent.h"
-
 #include "MarketCart.h"
 
 
@@ -19,16 +18,47 @@ UCartMovementComponent::UCartMovementComponent()
 	TurnRate = 1000.0f;
 	SlowDownFactor = 20.0f;
 	BoostSpeed = 700.0f;
-	BoostCooldown = 0.5f;
+	BoostCooldown = 1.3f;
 	MaxRoll = 50.0f;
 	MaxPitch = 50.0f;
+	ToppledDuration =3.0f;
 	// Reduce velocity to 50%
 	bIsSlowingDown = false;
 	
 	CurrentState = ECartState::Idle;
 	// ...
 }
+void UCartMovementComponent::ServerStartBoost_Implementation(bool IsReversed)
+{
+	StartBoost(IsReversed);
+}
 
+bool UCartMovementComponent::ServerStartBoost_Validate(bool IsReversed)
+{
+	// Add validation logic if necessary
+	return true;
+}
+
+void UCartMovementComponent::ServerResetCart_Implementation()
+{
+	ResetCart();
+}
+
+bool UCartMovementComponent::ServerResetCart_Validate()
+{
+	// Add validation logic if necessary
+	return true;
+}
+void UCartMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCartMovementComponent, TurnRate);
+	DOREPLIFETIME(UCartMovementComponent, AnimData);
+	DOREPLIFETIME(UCartMovementComponent, CurrentState);
+	DOREPLIFETIME(UCartMovementComponent, bIsBoosting);
+	DOREPLIFETIME(UCartMovementComponent, bIsSlowingDown);
+}
 
 // Called every frame
 void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -117,13 +147,13 @@ bool UCartMovementComponent::IsFrontWheelLifted() const
 	FRotator CurrentRotation = UpdatedComponent->GetComponentRotation();
 	return CurrentRotation.Pitch > MaxPitch / 2; // Adjust the threshold as needed
 }
-
 void UCartMovementComponent::UpdateCartState(bool bIsGrounded, bool bIsUpright)
 {
+	if(CurrentState == ECartState::Crashed)
+	{
+		return;
+	}
 	FVector InputVector = GetPendingInputVector();
-
-	// Reset to Idle if no conditions are met
-	CurrentState = ECartState::Upright;
 
 	// Check conditions and update state accordingly
 	if (!bIsGrounded)
@@ -132,7 +162,18 @@ void UCartMovementComponent::UpdateCartState(bool bIsGrounded, bool bIsUpright)
 	}
 	else if (!bIsUpright)
 	{
-		CurrentState = ECartState::Toppled;
+		if (CurrentState != ECartState::Toppled)
+		{
+			// Transition to Toppled state and start the crash timer
+			CurrentState = ECartState::Toppled;
+			GetOwner()->GetWorldTimerManager().SetTimer(
+				ToppledTimerHandle,
+				this,
+				&UCartMovementComponent::TransitionToCrashed,
+				ToppledDuration,
+				false
+			);
+		}
 	}
 	else if (bIsSlowingDown)
 	{
@@ -153,9 +194,51 @@ void UCartMovementComponent::UpdateCartState(bool bIsGrounded, bool bIsUpright)
 	{
 		CurrentState = ECartState::Wheelie;
 	}
+	else
+	{
+		CurrentState = ECartState::Upright;
+	}
+
+	// If the cart recovers from Toppled state, clear the crash timer
+	if (CurrentState != ECartState::Toppled && GetOwner()->GetWorldTimerManager().IsTimerActive(ToppledTimerHandle))
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(ToppledTimerHandle);
+  
+	}
 
 	// Debug output for testing
 	UE_LOG(LogTemp, Log, TEXT("Current Cart State: %s"), *UEnum::GetValueAsString(CurrentState));
+}
+void UCartMovementComponent::TransitionToCrashed()
+{
+	if (CurrentState == ECartState::Toppled)
+	{
+		CurrentState = ECartState::Crashed;
+		UE_LOG(LogTemp, Warning, TEXT("Cart has been in Toppled state for too long. Transitioning to Crashed."));
+		ResetCart();
+	}
+}
+void UCartMovementComponent::ResetCart()
+{
+	// Reset position and rotation
+	if (AActor* Owner = GetOwner())
+	{
+		FVector ResetPosition = Owner->GetActorLocation();
+		ResetPosition.Z += 100.0f; // Lift slightly to avoid clipping into the ground
+		Owner->SetActorLocation(ResetPosition);
+
+		FRotator ResetRotation = FRotator(0.0f, Owner->GetActorRotation().Yaw, 0.0f); // Keep only Yaw rotation
+		Owner->SetActorRotation(ResetRotation);
+
+		UE_LOG(LogTemp, Log, TEXT("Cart position and rotation have been reset."));
+	}
+
+	// Clear any active timers
+	GetOwner()->GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	// Reset state to Upright
+	CurrentState = ECartState::Upright;
+	UE_LOG(LogTemp, Log, TEXT("Cart state has been reset to Upright."));
 }
 void UCartMovementComponent::RaiseFrontWheels()
 {
@@ -257,8 +340,19 @@ void UCartMovementComponent::StartBoost(bool IsReversed)
 	}
 	bIsBoosting = true;
 	bCanBoost = false;
+	AnimData.PushDirection = IsReversed;
+	AnimData.bIsPushing = true;
+	ApplyImpulse(IsReversed);
+	// Set a timer to reset the boost state
+	if (GetOwner())
+	{
+		GetOwner()->GetWorldTimerManager().SetTimer(BoostCooldownTimerHandle, this, &UCartMovementComponent::ResetBoostCooldown, BoostCooldown, false);
+	}
 
-	// Apply forward impulse to the cart
+	// Optionally, you can add some logic to stop boosting visually or apply effects.
+}
+void UCartMovementComponent::ApplyImpulse(bool IsReversed)
+{
 	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
 	{
 		FVector ForwardVector = UpdatedComponent->GetForwardVector();
@@ -269,19 +363,8 @@ void UCartMovementComponent::StartBoost(bool IsReversed)
 			Impulse /= 2;
 		}// BoostSpeed is now treated as the impulse magnitude
 		PrimitiveComponent->AddImpulse(Impulse, NAME_None, true);
-		
-		AnimData.bIsPushing = true;
 	}
-
-	// Set a timer to reset the boost state
-	if (GetOwner())
-	{
-		GetOwner()->GetWorldTimerManager().SetTimer(BoostCooldownTimerHandle, this, &UCartMovementComponent::ResetBoostCooldown, BoostCooldown, false);
-	}
-
-	// Optionally, you can add some logic to stop boosting visually or apply effects.
 }
-
 void UCartMovementComponent::ResetBoostCooldown()
 {
 	bIsBoosting = false;// Reset the boost state

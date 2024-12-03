@@ -21,6 +21,9 @@ AMarketCart::AMarketCart()
 	
 	CollisionComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
 	RootComponent = CollisionComp;
+	
+	CharacterVisual = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterVisual"));
+	CharacterVisual->SetupAttachment(RootComponent);
 	FRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FR Wheel"));
 	FLWheel = CreateDefaultSubobject<USphereComponent>(TEXT("FL Wheel"));
 	BRWheel = CreateDefaultSubobject<USphereComponent>(TEXT("BR Wheel"));
