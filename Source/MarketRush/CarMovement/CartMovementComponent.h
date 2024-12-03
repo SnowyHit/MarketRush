@@ -101,6 +101,12 @@ public:
 	void StartSlowDown();
 	void StopSlowDown();
 	void UpdateCartTick(float DeltaTime);
+	UPROPERTY(Replicated)
+	FVector ReplicatedInputVector;
+
+	UPROPERTY(Replicated)
+	FRotator ReplicatedRotation;
+	
 	UFUNCTION(BlueprintCallable)
 	void SetPushingAnimationToFalse();
 	
@@ -114,11 +120,14 @@ public:
 	void ServerSlowDown_Implementation(bool Start);
 	bool ServerSlowDown_Validate(bool Start);
 
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Unreliable)
 	void ServerTickCart(float DeltaTime);
 	void ServerTickCart_Implementation(float DeltaTime);
 	bool ServerTickCart_Validate(float DeltaTime);
-
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpdateCartState(const FVector& InputVector, const FRotator& Rotation , const float& Deltatime);
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerResetCart();
 	void ServerResetCart_Implementation();
@@ -128,6 +137,7 @@ public:
 	void ServerRaiseFrontWheels();
 	void ServerRaiseFrontWheels_Implementation();
 	bool ServerRaiseFrontWheels_Validate();
+
 private:
 	// Timer handles for managing boost state
 	FTimerHandle BoostDurationTimerHandle;

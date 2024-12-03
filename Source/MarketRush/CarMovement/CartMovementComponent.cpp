@@ -66,6 +66,77 @@ bool UCartMovementComponent::ServerTickCart_Validate(float DeltaTime)
 	return true;
 }
 
+void UCartMovementComponent::Server_UpdateCartState_Implementation(const FVector& InputVector, const FRotator& Rotation , const float& Deltatime)
+{
+	if (!GetOwner()->HasAuthority())
+	{
+		return; // Prevent physics updates on clients
+	}
+	bool bIsGrounded = IsGrounded();
+	// Check if the cart is upright
+	bool bIsUpright = IsCartUpright(0);
+	UpdateCartState(bIsGrounded, bIsUpright);
+	FVector NewVel = FVector::Zero();
+
+	if (PawnOwner && UpdatedComponent)
+	{
+		if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
+		{
+			FVector CurVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
+			if (bIsSlowingDown)
+			{
+				// Apply a friction-like force only if the cart is moving
+				if (!CurVelocity.IsNearlyZero(0.1f))
+				{
+					FVector CurrentVel = PrimitiveComponent->GetPhysicsLinearVelocity();
+					SlowDownFactor = FMath::Clamp(SlowDownFactor, 0.0f, 1.0f);
+					FVector Deceleration = CurrentVel * SlowDownFactor * 0.0016f; // Gradual slowdown
+
+					// Apply deceleration, ensuring the cart doesn't reverse direction suddenly
+					FVector NewVelocity = CurrentVel - Deceleration;
+
+					// Apply the new velocity back to the cart
+					PrimitiveComponent->SetPhysicsLinearVelocity(NewVelocity, false);
+				}
+			}
+			if (!InputVector.IsNearlyZero() && CurrentState != ECartState::Toppled)
+			{
+				if(!bIsSlowingDown)
+				{
+					float SteeringInput = InputVector.Y;
+			
+					FVector TorqueToAdd = FVector(0, 0, SteeringInput * TurnRate * 0.0016f);
+					if (CurVelocity.IsNearlyZero(100.0f))
+					{
+						TorqueToAdd *= 100;
+					}
+					PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
+				}
+			
+			}
+			NewVel = PrimitiveComponent->GetPhysicsLinearVelocity();
+		}
+		AnimData.Speed = NewVel.Size();
+		AnimData.TurnIntensity = InputVector.Y;
+		ReplicatedInputVector = NewVel;
+		ReplicatedRotation = Rotation;
+		FRotator SmoothedRotation = FMath::RInterpTo(
+			UpdatedComponent->GetComponentRotation(), 
+			ReplicatedRotation, 
+			Deltatime, 
+			5.0f // Interpolation speed
+		);
+
+		UpdatedComponent->SetWorldRotation(SmoothedRotation);
+		AddInputVector(NewVel); // Apply movement on the server
+	}
+}
+
+bool UCartMovementComponent::Server_UpdateCartState_Validate(const FVector& InputVector, const FRotator& Rotation , const float& Deltatime)
+{
+	return true;
+}
+
 void UCartMovementComponent::ServerResetCart_Implementation()
 {
 	ResetCart();
@@ -92,14 +163,41 @@ void UCartMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCartMovementComponent, AnimData);
+	DOREPLIFETIME(UCartMovementComponent, ReplicatedRotation);
+	DOREPLIFETIME(UCartMovementComponent, ReplicatedInputVector);
 }
 // Called every frame
 void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                            FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if(GetOwner()->HasAuthority())
+	{
+		return;
+	}
+	if (!PawnOwner || !UpdatedComponent)
+	{
+		return;
+	}
 	
-	ServerTickCart(DeltaTime);
+	FVector SpeedVec = FVector::Zero();
+	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
+	{
+		FVector CurrentVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
+		SpeedVec=CurrentVelocity;
+		// Clamp the current velocity if it exceeds the maximum allowed
+		if (CurrentVelocity.Size() > MaxVelocity)
+		{
+			CurrentVelocity = CurrentVelocity.GetSafeNormal() * MaxVelocity;
+			PrimitiveComponent->SetPhysicsLinearVelocity(CurrentVelocity, false);
+		}
+	}
+	FVector CurrentInputVector = GetPendingInputVector();
+	FRotator CurrentRotation = UpdatedComponent->GetComponentRotation();
+
+		// Send the input and rotation to the server
+	Server_UpdateCartState(CurrentInputVector, CurrentRotation , DeltaTime);
+	ConsumeInputVector();
 }
 
 bool UCartMovementComponent::IsFrontWheelLifted() const
@@ -345,64 +443,7 @@ void UCartMovementComponent::StopSlowDown()
 
 void UCartMovementComponent::UpdateCartTick(float DeltaTime)
 {
-	if (!PawnOwner || !UpdatedComponent)
-	{
-		return;
-	}
-	bool bIsGrounded = IsGrounded();
-	// Check if the cart is upright
-	bool bIsUpright = IsCartUpright(0);
-	UpdateCartState(bIsGrounded, bIsUpright);
 	
-	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
-	{
-		FVector CurrentVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
-		// Clamp the current velocity if it exceeds the maximum allowed
-		if (CurrentVelocity.Size() > MaxVelocity)
-		{
-			CurrentVelocity = CurrentVelocity.GetSafeNormal() * MaxVelocity;
-			PrimitiveComponent->SetPhysicsLinearVelocity(CurrentVelocity, false);
-		}
-		if (bIsSlowingDown)
-		{
-			// Apply a friction-like force only if the cart is moving
-			if (!CurrentVelocity.IsNearlyZero(0.1f))
-			{
-				FVector CurrentVel = PrimitiveComponent->GetPhysicsLinearVelocity();
-				SlowDownFactor = FMath::Clamp(SlowDownFactor, 0.0f, 1.0f);
-				FVector Deceleration = CurrentVel * SlowDownFactor * DeltaTime; // Gradual slowdown
-
-				// Apply deceleration, ensuring the cart doesn't reverse direction suddenly
-				FVector NewVelocity = CurrentVel - Deceleration;
-
-				// Apply the new velocity back to the cart
-				PrimitiveComponent->SetPhysicsLinearVelocity(NewVelocity, false);
-			}
-		}
-		auto CurrentInputVector = GetPendingInputVector().GetClampedToMaxSize(1.f);
-		if (!CurrentInputVector.IsNearlyZero() && CurrentState != ECartState::Toppled)
-		{
-			if(!bIsSlowingDown)
-			{
-				float SteeringInput = CurrentInputVector.Y;
-			
-				FVector TorqueToAdd = FVector(0, 0, SteeringInput * TurnRate * DeltaTime);
-				if (CurrentVelocity.IsNearlyZero(100.0f))
-				{
-					TorqueToAdd *= 100;
-				}
-			
-				PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
-			}
-			
-		}
-		// Update animation variables
-		AnimData.Speed = CurrentVelocity.Size();
-		// Calculate turn intensity based on input
-		FVector InputVector = GetPendingInputVector();
-		AnimData.TurnIntensity = InputVector.Y;
-	}
-	ConsumeInputVector();
 }
 
 void UCartMovementComponent::SetPushingAnimationToFalse()
