@@ -83,35 +83,35 @@ void AMarketCart::Boost(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->StartBoost(false);
+		CartMovement->ServerStartBoost(false);
 	}
 }
 void AMarketCart::Jump(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->RaiseFrontWheels();
+		CartMovement->ServerRaiseFrontWheels();
 	}
 }
 void AMarketCart::ReverseBoost(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->StartBoost(true);
+		CartMovement->ServerStartBoost(true);
 	}
 }
 void AMarketCart::StartSlowDown(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->StartSlowDown();
+		CartMovement->ServerSlowDown(true);
 	}
 }
 void AMarketCart::EndSlowDown(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->StopSlowDown();
+		CartMovement->ServerSlowDown(false);
 	}
 }
 

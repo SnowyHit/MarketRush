@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
 #include "MarketCart.generated.h"
 

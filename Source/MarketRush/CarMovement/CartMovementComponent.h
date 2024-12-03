@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "CartMovementComponent.generated.h"
@@ -63,55 +64,70 @@ public:
 	bool IsCartUpright(float Tolerance) const;
 	bool IsGrounded() const;
 
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float TurnRate;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	FCartAnimData AnimData;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float MaxVelocity;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float BoostSpeed;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float BoostCooldown;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float SlowDownFactor;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	bool bIsSlowingDown;
 	// Boost state
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	bool bIsBoosting;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	bool bCanBoost;
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	double MaxPitch;
 	
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	double MaxRoll;
-	UPROPERTY(Replicated ,VisibleAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	ECartState CurrentState;
 	bool bIsReversedPush;
 	FTimerHandle ToppledTimerHandle;
 	
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float ToppledDuration;
 	// Boost functions
 	void StartBoost(bool IsReversed);
 	void ApplyImpulse(bool IsReversed);
 	void StartSlowDown();
 	void StopSlowDown();
+	void UpdateCartTick(float DeltaTime);
 	UFUNCTION(BlueprintCallable)
 	void SetPushingAnimationToFalse();
-
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerStartBoost(bool IsReversed);
 	void ServerStartBoost_Implementation(bool IsReversed);
 	bool ServerStartBoost_Validate(bool IsReversed);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSlowDown(bool Start);
+	void ServerSlowDown_Implementation(bool Start);
+	bool ServerSlowDown_Validate(bool Start);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerTickCart(float DeltaTime);
+	void ServerTickCart_Implementation(float DeltaTime);
+	bool ServerTickCart_Validate(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerResetCart();
 	void ServerResetCart_Implementation();
 	bool ServerResetCart_Validate();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRaiseFrontWheels();
+	void ServerRaiseFrontWheels_Implementation();
+	bool ServerRaiseFrontWheels_Validate();
 private:
 	// Timer handles for managing boost state
 	FTimerHandle BoostDurationTimerHandle;
