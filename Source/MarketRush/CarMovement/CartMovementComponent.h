@@ -100,6 +100,7 @@ public:
 	void ApplyImpulse(bool IsReversed);
 	void StartSlowDown();
 	void StopSlowDown();
+	void TurnCart(float TurnIntensity);
 	void UpdateCartTick(float DeltaTime);
 	UPROPERTY(Replicated)
 	FVector ReplicatedInputVector;
@@ -126,8 +127,10 @@ public:
 	bool ServerTickCart_Validate(float DeltaTime);
 	
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_UpdateCartState(const FVector& InputVector, const FRotator& Rotation , const float& Deltatime);
-	
+	void Server_UpdateCartState(const FVector& InputVector, const FRotator& Rotation);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_TurnCart(float TurnIntensity);
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerResetCart();
 	void ServerResetCart_Implementation();
