@@ -7,30 +7,6 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "CartMovementComponent.generated.h"
-USTRUCT(BlueprintType)
-struct FCartAnimData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	bool bIsPushing;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	float TurnIntensity;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	float Speed;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	bool bIsSlowingDown;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	bool PushDirection;
-
-	FCartAnimData()
-		: bIsPushing(false), TurnIntensity(0.0f), Speed(0.0f), bIsSlowingDown(false)
-	{}
-};
 	
 UENUM(BlueprintType)
 enum class ECartState : uint8
@@ -66,8 +42,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float TurnRate;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
-	FCartAnimData AnimData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float MaxVelocity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
@@ -92,54 +66,59 @@ public:
 	ECartState CurrentState;
 	bool bIsReversedPush;
 	FTimerHandle ToppledTimerHandle;
+
+	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	bool AnimbIsPushing;
+
+	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	float AnimTurnIntensity;
+
+	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	float AnimSpeed;
+
+	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	bool AnimbIsSlowingDown;
+
+	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	bool AnimPushDirection;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float ToppledDuration;
+	
+	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	FVector ReplicatedLocation;
+	
+	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	FRotator ReplicatedRotation;
 	// Boost functions
 	void StartBoost(bool IsReversed);
 	void ApplyImpulse(bool IsReversed);
 	void StartSlowDown();
 	void StopSlowDown();
 	void TurnCart(float TurnIntensity);
-	void UpdateCartTick(float DeltaTime);
-	UPROPERTY(Replicated)
-	FVector ReplicatedInputVector;
-
-	UPROPERTY(Replicated)
-	FRotator ReplicatedRotation;
 	
 	UFUNCTION(BlueprintCallable)
 	void SetPushingAnimationToFalse();
 	
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void ServerStartBoost(bool IsReversed);
-	void ServerStartBoost_Implementation(bool IsReversed);
-	bool ServerStartBoost_Validate(bool IsReversed);
 	
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void ServerSlowDown(bool Start);
-	void ServerSlowDown_Implementation(bool Start);
-	bool ServerSlowDown_Validate(bool Start);
 
-	UFUNCTION(Server, Unreliable)
-	void ServerTickCart(float DeltaTime);
-	void ServerTickCart_Implementation(float DeltaTime);
-	bool ServerTickCart_Validate(float DeltaTime);
-	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_UpdateCartState(const FVector& InputVector, const FRotator& Rotation);
-
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void Server_TurnCart(float TurnIntensity);
-	UFUNCTION(Server, Reliable, WithValidation)
+	
+	UFUNCTION(Server, Reliable)
 	void ServerResetCart();
-	void ServerResetCart_Implementation();
-	bool ServerResetCart_Validate();
 
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void ServerRaiseFrontWheels();
-	void ServerRaiseFrontWheels_Implementation();
-	bool ServerRaiseFrontWheels_Validate();
+
+	UFUNCTION(Server, Reliable)
+	void ServerUpdateCart(const FVector& NewLocation , const FRotator& NewRotation);
+
+	
 
 private:
 	// Timer handles for managing boost state

@@ -42,7 +42,8 @@ AMarketCart::AMarketCart()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = true; //
-	NetUpdateFrequency = 100.0f; // Default is typically 100
+	SetReplicates(true);
+	NetUpdateFrequency = 150.0f; // Default is typically 100
 	MinNetUpdateFrequency = 30.0f;
 }
 // Called when the game starts or when spawned
@@ -119,6 +120,7 @@ void AMarketCart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMarketCart::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMarketCart::Move);
 		EnhancedInputComponent->BindAction(BoostAction, ETriggerEvent::Triggered, this, &AMarketCart::Boost);
 		EnhancedInputComponent->BindAction(ReverseBoostAction, ETriggerEvent::Triggered, this, &AMarketCart::ReverseBoost);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMarketCart::Jump);

@@ -15,8 +15,8 @@ UCartMovementComponent::UCartMovementComponent()
 	bIsBoosting = false;
 	bCanBoost = true;
 	MaxVelocity = 1400.0f;
-	TurnRate = 1000.0f;
-	SlowDownFactor = 20.0f;
+	TurnRate = 500.0f;
+	SlowDownFactor = 1.0f;
 	BoostSpeed = 700.0f;
 	BoostCooldown = 1.3f;
 	MaxRoll = 50.0f;
@@ -24,20 +24,13 @@ UCartMovementComponent::UCartMovementComponent()
 	ToppledDuration =3.0f;
 	// Reduce velocity to 50%
 	bIsSlowingDown = false;
-	
+	SetIsReplicated(true);
 	CurrentState = ECartState::Idle;
-	PrimaryComponentTick.TickInterval = 1.0f / 30.0f;
 	// ...
 }
 void UCartMovementComponent::ServerStartBoost_Implementation(bool IsReversed)
 {
 	StartBoost(IsReversed);
-}
-
-bool UCartMovementComponent::ServerStartBoost_Validate(bool IsReversed)
-{
-	// Add validation logic if necessary
-	return true;
 }
 
 void UCartMovementComponent::ServerSlowDown_Implementation(bool Start)
@@ -51,56 +44,9 @@ void UCartMovementComponent::ServerSlowDown_Implementation(bool Start)
 		StopSlowDown();
 	}
 }
-
-bool UCartMovementComponent::ServerSlowDown_Validate(bool Start)
-{
-	return true;
-}
-
-void UCartMovementComponent::ServerTickCart_Implementation(float DeltaTime)
-{
-	UpdateCartTick(DeltaTime);
-}
-
-bool UCartMovementComponent::ServerTickCart_Validate(float DeltaTime)
-{
-	return true;
-}
-
 void UCartMovementComponent::Server_TurnCart_Implementation(float TurnIntensity)
 {
 	TurnCart(TurnIntensity);
-}
-
-bool UCartMovementComponent::Server_TurnCart_Validate(float TurnIntensity)
-{
-	return true;
-}
-
-void UCartMovementComponent::Server_UpdateCartState_Implementation(const FVector& InputVector, const FRotator& Rotation)
-{
-    if (PawnOwner && UpdatedComponent)
-    {
-    	bool bIsGrounded = IsGrounded();
-    	bool bIsUpright = IsCartUpright(0);
-    	UpdateCartState(bIsGrounded, bIsUpright);
-    	
-        if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
-        {
-            FVector CurVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
-
-            AnimData.Speed = CurVelocity.Size();
-            AnimData.TurnIntensity = InputVector.Y;
-        }
-    	ReplicatedRotation = Rotation;
-    	AddInputVector(InputVector);
-    }
-	
-}
-
-bool UCartMovementComponent::Server_UpdateCartState_Validate(const FVector& InputVector, const FRotator& Rotation)
-{
-	return true;
 }
 
 void UCartMovementComponent::ServerResetCart_Implementation()
@@ -108,42 +54,58 @@ void UCartMovementComponent::ServerResetCart_Implementation()
 	ResetCart();
 }
 
-bool UCartMovementComponent::ServerResetCart_Validate()
-{
-	// Add validation logic if necessary
-	return true;
-}
-
 void UCartMovementComponent::ServerRaiseFrontWheels_Implementation()
 {
 	RaiseFrontWheels();
-}
-
-bool UCartMovementComponent::ServerRaiseFrontWheels_Validate()
-{
-	return true;
 }
 
 void UCartMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UCartMovementComponent, AnimData);
+	DOREPLIFETIME(UCartMovementComponent, AnimSpeed);
+	DOREPLIFETIME(UCartMovementComponent, AnimbIsPushing);
+	DOREPLIFETIME(UCartMovementComponent, AnimPushDirection);
+	DOREPLIFETIME(UCartMovementComponent, AnimTurnIntensity);
+	DOREPLIFETIME(UCartMovementComponent, AnimbIsSlowingDown);
 	DOREPLIFETIME(UCartMovementComponent, ReplicatedRotation);
-	DOREPLIFETIME(UCartMovementComponent, ReplicatedInputVector);
+	DOREPLIFETIME(UCartMovementComponent, ReplicatedLocation);
 }
 // Called every frame
 void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                            FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	FVector CurrentInputVector = GetPendingInputVector();
-	FRotator CurrentRotation = UpdatedComponent->GetComponentRotation();
+	// Logging server position (if on the server)
+	if (GetOwner()->HasAuthority())
+	{
+		FVector ServerPosition = UpdatedComponent->GetComponentLocation();
+		FRotator ServerRotation = UpdatedComponent->GetComponentRotation();
+		UE_LOG(LogTemp, Log, TEXT("Server Position: X=%.2f, Y=%.2f, Z=%.2f"), ServerPosition.X, ServerPosition.Y, ServerPosition.Z);
+		ServerUpdateCart(ServerPosition,ServerRotation);
+	}
 
-		// Send the input and rotation to the server
-	Server_UpdateCartState(CurrentInputVector, CurrentRotation);
-	ConsumeInputVector();
+	// Logging client position (if on the client)
+	if (!GetOwner()->HasAuthority())
+	{
+		FVector ClientPosition = UpdatedComponent->GetComponentLocation();
+		FRotator ClientRotation = UpdatedComponent->GetComponentRotation();
+		UE_LOG(LogTemp, Log, TEXT("Client Position: X=%.2f, Y=%.2f, Z=%.2f"), ClientPosition.X, ClientPosition.Y, ClientPosition.Z);
+		FVector TargetPosition = ReplicatedLocation;
+		FRotator TargetRotation = ReplicatedRotation;
+
+		// Interpolate position and rotation
+		FVector SmoothedPosition = FMath::VInterpTo(ClientPosition, TargetPosition, DeltaTime, 10.0f); // Adjust interp speed as needed
+		FRotator SmoothedRotation = FMath::RInterpTo(ClientRotation, TargetRotation, DeltaTime, 10.0f); // Adjust interp speed as needed
+
+		UpdatedComponent->SetWorldLocation(SmoothedPosition);
+		UpdatedComponent->SetWorldRotation(SmoothedRotation);
+	}
+	bool bIsGrounded = IsGrounded();
+	bool bIsUpright = IsCartUpright(0);
+	UpdateCartState(bIsGrounded, bIsUpright);
+    	
+	AnimSpeed = UpdatedComponent->GetComponentVelocity().Size();
 }
 
 bool UCartMovementComponent::IsFrontWheelLifted() const
@@ -344,8 +306,8 @@ void UCartMovementComponent::StartBoost(bool IsReversed)
 	}
 	bIsBoosting = true;
 	bCanBoost = false;
-	AnimData.PushDirection = IsReversed;
-	AnimData.bIsPushing = true;
+	AnimPushDirection = IsReversed;
+	AnimbIsPushing = true;
 	ApplyImpulse(IsReversed);
 	// Set a timer to reset the boost state
 	if (GetOwner())
@@ -369,16 +331,24 @@ void UCartMovementComponent::ApplyImpulse(bool IsReversed)
 		PrimitiveComponent->AddImpulse(Impulse, NAME_None, true);
 	}
 }
+
+
+void UCartMovementComponent::ServerUpdateCart_Implementation(const FVector& NewLocation, const FRotator& NewRotation)
+{
+	ReplicatedRotation = NewRotation;
+	ReplicatedLocation = NewLocation;
+}
+
 void UCartMovementComponent::ResetBoostCooldown()
 {
 	bIsBoosting = false;// Reset the boost state
 	bCanBoost = true;
-	AnimData.bIsPushing = false;
+	AnimbIsPushing = false;
 }
 void UCartMovementComponent::StartSlowDown()
 {
 	bIsSlowingDown = true;
-	AnimData.bIsSlowingDown = true;
+	AnimbIsSlowingDown = true;
 	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
 	{
 		PrimitiveComponent->SetLinearDamping(SlowDownFactor);
@@ -388,7 +358,7 @@ void UCartMovementComponent::StartSlowDown()
 void UCartMovementComponent::StopSlowDown()
 {
 	bIsSlowingDown = false;
-	AnimData.bIsSlowingDown = false;
+	AnimbIsSlowingDown = false;
 	if (UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(UpdatedComponent))
 	{
 		PrimitiveComponent->SetLinearDamping(0);
@@ -409,13 +379,14 @@ void UCartMovementComponent::TurnCart(float TurnIntensity)
 				TorqueToAdd *= 5;
 			}
 			PrimitiveComponent->AddTorqueInRadians(TorqueToAdd, NAME_None, true);
+			AnimTurnIntensity = TurnIntensity;
 		}
 	}
 }
 
 void UCartMovementComponent::SetPushingAnimationToFalse()
 {
-	AnimData.bIsPushing = false;
+	AnimbIsPushing = false;
 }
 
 
