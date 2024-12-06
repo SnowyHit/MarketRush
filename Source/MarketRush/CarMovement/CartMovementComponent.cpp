@@ -24,7 +24,6 @@ UCartMovementComponent::UCartMovementComponent()
 	ToppledDuration =3.0f;
 	// Reduce velocity to 50%
 	bIsSlowingDown = false;
-	SetIsReplicated(true);
 	CurrentState = ECartState::Idle;
 	// ...
 }
