@@ -94,8 +94,8 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FRotator TargetRotation = ReplicatedRotation;
 
 		// Interpolate position and rotation
-		FVector SmoothedPosition = FMath::VInterpTo(ClientPosition, TargetPosition, DeltaTime, 10.0f); // Adjust interp speed as needed
-		FRotator SmoothedRotation = FMath::RInterpTo(ClientRotation, TargetRotation, DeltaTime, 10.0f); // Adjust interp speed as needed
+		FVector SmoothedPosition = FMath::VInterpTo(ClientPosition, TargetPosition, DeltaTime, 30.0f); // Adjust interp speed as needed
+		FRotator SmoothedRotation = FMath::RInterpTo(ClientRotation, TargetRotation, DeltaTime, 30.0f); // Adjust interp speed as needed
 
 		UpdatedComponent->SetWorldLocation(SmoothedPosition);
 		UpdatedComponent->SetWorldRotation(SmoothedRotation);
