@@ -17,8 +17,8 @@ UCartMovementComponent::UCartMovementComponent()
 	MaxVelocity = 1400.0f;
 	TurnRate = 500.0f;
 	SlowDownFactor = 1.0f;
-	BoostSpeed = 700.0f;
-	BoostCooldown = 1.3f;
+	BoostSpeed = 500.0f;
+	BoostCooldown = 0.75f;
 	MaxRoll = 50.0f;
 	MaxPitch = 50.0f;
 	ToppledDuration =3.0f;
@@ -27,12 +27,13 @@ UCartMovementComponent::UCartMovementComponent()
 	CurrentState = ECartState::Idle;
 	// ...
 }
-void UCartMovementComponent::ServerStartBoost_Implementation(bool IsReversed)
+void UCartMovementComponent::ClientStartBoost_Implementation(bool IsReversed)
 {
 	StartBoost(IsReversed);
+	ServerStartBoost(IsReversed);	
 }
 
-void UCartMovementComponent::ServerSlowDown_Implementation(bool Start)
+void UCartMovementComponent::ClientSlowDown_Implementation(bool Start)
 {
 	if(Start)
 	{
@@ -42,20 +43,24 @@ void UCartMovementComponent::ServerSlowDown_Implementation(bool Start)
 	{
 		StopSlowDown();
 	}
+	ServerSlowDown(Start);
 }
-void UCartMovementComponent::Server_TurnCart_Implementation(float TurnIntensity)
+void UCartMovementComponent::ClientTurnCart_Implementation(float TurnIntensity)
 {
 	TurnCart(TurnIntensity);
+	ServerTurnCart(TurnIntensity);
 }
 
-void UCartMovementComponent::ServerResetCart_Implementation()
+void UCartMovementComponent::ClientResetCart_Implementation()
 {
 	ResetCart();
+	ServerResetCart();
 }
 
-void UCartMovementComponent::ServerRaiseFrontWheels_Implementation()
+void UCartMovementComponent::ClientRaiseFrontWheels_Implementation()
 {
 	RaiseFrontWheels();
+	ServerRaiseFrontWheels();
 }
 
 void UCartMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -84,8 +89,9 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		ServerUpdateCart(ServerPosition,ServerRotation);
 	}
 
+	
 	// Logging client position (if on the client)
-	if (!GetOwner()->HasAuthority())
+	/*if (!GetOwner()->HasAuthority())
 	{
 		FVector ClientPosition = UpdatedComponent->GetComponentLocation();
 		FRotator ClientRotation = UpdatedComponent->GetComponentRotation();
@@ -94,12 +100,12 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		FRotator TargetRotation = ReplicatedRotation;
 
 		// Interpolate position and rotation
-		FVector SmoothedPosition = FMath::VInterpTo(ClientPosition, TargetPosition, DeltaTime, 30.0f); // Adjust interp speed as needed
-		FRotator SmoothedRotation = FMath::RInterpTo(ClientRotation, TargetRotation, DeltaTime, 30.0f); // Adjust interp speed as needed
+		FVector SmoothedPosition = FMath::VInterpTo(ClientPosition, TargetPosition, DeltaTime, 20.0f); // Adjust interp speed as needed
+		FRotator SmoothedRotation = FMath::RInterpTo(ClientRotation, TargetRotation, DeltaTime, 20.0f); // Adjust interp speed as needed
 
 		UpdatedComponent->SetWorldLocation(SmoothedPosition);
 		UpdatedComponent->SetWorldRotation(SmoothedRotation);
-	}
+	}*/
 	bool bIsGrounded = IsGrounded();
 	bool bIsUpright = IsCartUpright(0);
 	UpdateCartState(bIsGrounded, bIsUpright);
@@ -180,7 +186,7 @@ void UCartMovementComponent::TransitionToCrashed()
 	{
 		CurrentState = ECartState::Crashed;
 		//UE_LOG(LogTemp, Warning, TEXT("Cart has been in Toppled state for too long. Transitioning to Crashed."));
-		ServerResetCart();
+		ClientResetCart();
 	}
 }
 void UCartMovementComponent::ResetCart()
@@ -338,6 +344,10 @@ void UCartMovementComponent::ServerUpdateCart_Implementation(const FVector& NewL
 	ReplicatedLocation = NewLocation;
 }
 
+void UCartMovementComponent::ServerRaiseFrontWheels_Implementation()
+{
+}
+
 void UCartMovementComponent::ResetBoostCooldown()
 {
 	bIsBoosting = false;// Reset the boost state
@@ -386,6 +396,33 @@ void UCartMovementComponent::TurnCart(float TurnIntensity)
 void UCartMovementComponent::SetPushingAnimationToFalse()
 {
 	AnimbIsPushing = false;
+}
+
+void UCartMovementComponent::ServerStartBoost_Implementation(bool IsReversed)
+{
+	StartBoost(IsReversed);
+}
+
+void UCartMovementComponent::ServerSlowDown_Implementation(bool Start)
+{
+	if(Start)
+	{
+		StartSlowDown();
+	}
+	else
+	{
+		StopSlowDown();
+	}
+}
+
+void UCartMovementComponent::ServerTurnCart_Implementation(float TurnIntensity)
+{
+	TurnCart(TurnIntensity);
+}
+
+void UCartMovementComponent::ServerResetCart_Implementation()
+{
+	ResetCart();
 }
 
 

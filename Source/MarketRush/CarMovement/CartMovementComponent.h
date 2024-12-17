@@ -100,18 +100,28 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetPushingAnimationToFalse();
 	
+	UFUNCTION(Client, Reliable)
+	void ClientStartBoost(bool IsReversed);
 	UFUNCTION(Server, Reliable)
 	void ServerStartBoost(bool IsReversed);
 	
+	UFUNCTION(Client, Reliable)
+	void ClientSlowDown(bool Start);
 	UFUNCTION(Server, Reliable)
 	void ServerSlowDown(bool Start);
 
+	UFUNCTION(Client, Reliable)
+	void ClientTurnCart(float TurnIntensity);
 	UFUNCTION(Server, Reliable)
-	void Server_TurnCart(float TurnIntensity);
+	void ServerTurnCart(float TurnIntensity);
 	
+	UFUNCTION(Client, Reliable)
+	void ClientResetCart();
 	UFUNCTION(Server, Reliable)
 	void ServerResetCart();
 
+	UFUNCTION(Client, Reliable)
+	void ClientRaiseFrontWheels();
 	UFUNCTION(Server, Reliable)
 	void ServerRaiseFrontWheels();
 

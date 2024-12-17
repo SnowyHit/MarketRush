@@ -63,7 +63,7 @@ void AMarketCart::Move(const FInputActionValue& Value)
 
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->Server_TurnCart(Value.Get<FVector2D>().X);
+		CartMovement->ClientTurnCart(Value.Get<FVector2D>().X);
 	}
 }
 
@@ -71,35 +71,35 @@ void AMarketCart::Boost(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->ServerStartBoost(false);
+		CartMovement->ClientStartBoost(false);
 	}
 }
 void AMarketCart::Jump(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->ServerRaiseFrontWheels();
+		CartMovement->ClientRaiseFrontWheels();
 	}
 }
 void AMarketCart::ReverseBoost(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->ServerStartBoost(true);
+		CartMovement->ClientStartBoost(true);
 	}
 }
 void AMarketCart::StartSlowDown(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->ServerSlowDown(true);
+		CartMovement->ClientSlowDown(true);
 	}
 }
 void AMarketCart::EndSlowDown(const FInputActionValue& Value)
 {
 	if (UCartMovementComponent* CartMovement = Cast<UCartMovementComponent>(GetMovementComponent()))
 	{
-		CartMovement->ServerSlowDown(false);
+		CartMovement->ClientSlowDown(false);
 	}
 }
 
