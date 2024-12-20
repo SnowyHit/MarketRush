@@ -135,9 +135,17 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 	else
 	{
-		//This Update gives information to other clients. Set the location of non player controlled player pawns.
-		UpdatedComponent->SetWorldLocation(ReplicatedLocation);
-		UpdatedComponent->SetWorldRotation(ReplicatedRotation,true);
+		// Get current location and rotation
+		FVector CurrentLocation = UpdatedComponent->GetComponentLocation();
+		FQuat CurrentRotation = UpdatedComponent->GetComponentQuat();
+
+		// Smooth the location with a damping factor
+		FVector SmoothedLocation = FMath::VInterpTo(CurrentLocation, ReplicatedLocation, DeltaTime, 5.0f); // Adjust speed
+		FQuat SmoothedRotation = FQuat::Slerp(CurrentRotation, ReplicatedRotation.Quaternion(), DeltaTime * 5.0f); // Adjust speed
+
+		// Apply the smoothed values
+		UpdatedComponent->SetWorldLocation(SmoothedLocation);
+		UpdatedComponent->SetWorldRotation(SmoothedRotation);
 	}
 	bool bIsGrounded = IsGrounded();
 	bool bIsUpright = IsCartUpright(0);

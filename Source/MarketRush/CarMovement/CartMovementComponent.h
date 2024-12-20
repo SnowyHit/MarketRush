@@ -101,27 +101,27 @@ public:
 	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	FRotator ReplicatedRotation;
 	
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void ClientStartBoost(bool IsReversed);
 	UFUNCTION(Server, Reliable)
 	void ServerStartBoost(bool IsReversed);
 	
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void ClientSlowDown(bool Start);
 	UFUNCTION(Server, Reliable)
 	void ServerSlowDown(bool Start);
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void ClientTurnCart(float TurnIntensity);
 	UFUNCTION(Server, Reliable)
 	void ServerTurnCart(float TurnIntensity);
 	
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void ClientResetCart();
 	UFUNCTION(Server, Reliable)
 	void ServerResetCart();
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void ClientRaiseFrontWheels();
 	UFUNCTION(Server, Reliable)
 	void ServerRaiseFrontWheels();
