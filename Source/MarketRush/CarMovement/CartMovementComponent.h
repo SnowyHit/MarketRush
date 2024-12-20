@@ -30,7 +30,8 @@ class MARKETRUSH_API UCartMovementComponent : public UPawnMovementComponent
 
 public:
 	UCartMovementComponent();
-
+	virtual void BeginPlay() override;
+	bool IsOwnedByLocalPlayer() const;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	bool IsFrontWheelLifted() const;
 	void UpdateCartState(bool bIsGrounded, bool bIsUpright);
@@ -39,7 +40,16 @@ public:
 	void RaiseFrontWheels();
 	bool IsCartUpright(float Tolerance) const;
 	bool IsGrounded() const;
-
+	// Boost functions
+	void StartBoost(bool IsReversed);
+	void ApplyImpulse(bool IsReversed);
+	void StartSlowDown();
+	void StopSlowDown();
+	void TurnCart(float TurnIntensity);
+	
+	UFUNCTION(BlueprintCallable)
+	void SetPushingAnimationToFalse();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float TurnRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
@@ -67,22 +77,22 @@ public:
 	bool bIsReversedPush;
 	FTimerHandle ToppledTimerHandle;
 
-	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	bool AnimbIsPushing;
 
-	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	float AnimTurnIntensity;
 
-	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	float AnimSpeed;
 
-	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	bool AnimbIsSlowingDown;
 
-	UPROPERTY(Replicated ,BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	bool AnimPushDirection;
 	
-	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	float ToppledDuration;
 	
 	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
@@ -90,15 +100,6 @@ public:
 	
 	UPROPERTY(Replicated ,EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
 	FRotator ReplicatedRotation;
-	// Boost functions
-	void StartBoost(bool IsReversed);
-	void ApplyImpulse(bool IsReversed);
-	void StartSlowDown();
-	void StopSlowDown();
-	void TurnCart(float TurnIntensity);
-	
-	UFUNCTION(BlueprintCallable)
-	void SetPushingAnimationToFalse();
 	
 	UFUNCTION(Client, Reliable)
 	void ClientStartBoost(bool IsReversed);
@@ -126,7 +127,7 @@ public:
 	void ServerRaiseFrontWheels();
 
 	UFUNCTION(Server, Reliable)
-	void ServerUpdateCart(const FVector& NewLocation , const FRotator& NewRotation);
+	void ServerUpdateRepTransformCart(const FVector& NewLocation , const FRotator& NewRotation);
 
 	
 
