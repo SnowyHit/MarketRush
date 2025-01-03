@@ -20,10 +20,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="cidr-memory-view://3" root0="FORCE_HIGHLIGHTING" />
-    <setting file="cidr-memory-view://4" root0="FORCE_HIGHLIGHTING" />
+    <setting file="cidr-memory-view://0" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Core/Public/Logging/LogCategory.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Core/Public/Math/Rotator.h" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://C:/Program Files/Epic Games/UE_5.4/Engine/Source/Runtime/Core/Public/Math/UnrealMathUtility.h" root0="FORCE_HIGHLIGHTING" />
@@ -199,6 +196,19 @@
       <workItem from="1734165949869" duration="1114000" />
       <workItem from="1734468886818" duration="73000" />
       <workItem from="1734468972433" duration="5800000" />
+      <workItem from="1734775483851" duration="135000" />
+      <workItem from="1734775631374" duration="6584000" />
+      <workItem from="1734859735429" duration="348000" />
+      <workItem from="1734860098317" duration="4867000" />
+      <workItem from="1734959006347" duration="595000" />
+      <workItem from="1734960947830" duration="2058000" />
+      <workItem from="1735066303206" duration="2251000" />
+      <workItem from="1735142869948" duration="233000" />
+      <workItem from="1735143116463" duration="1835000" />
+      <workItem from="1735394107098" duration="208000" />
+      <workItem from="1735394451111" duration="1278000" />
+      <workItem from="1735799459961" duration="596000" />
+      <workItem from="1735800457329" duration="3655000" />
     </task>
     <servers />
   </component>

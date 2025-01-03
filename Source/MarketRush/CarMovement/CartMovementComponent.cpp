@@ -25,7 +25,6 @@ UCartMovementComponent::UCartMovementComponent()
 	// Reduce velocity to 50%
 	bIsSlowingDown = false;
 	CurrentState = ECartState::Idle;
-	SetIsReplicated(true);
 	// ...
 }
 
@@ -98,12 +97,18 @@ void UCartMovementComponent::ServerUpdateRepTransformCart_Implementation(const F
 {
 	ReplicatedRotation = NewRotation;
 	ReplicatedLocation = NewLocation;
+	UE_LOG(LogTemp, Log, TEXT("ReplicatedLocation: New Location: %s"), *ReplicatedLocation.ToString());
 }
 void UCartMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCartMovementComponent, ReplicatedRotation);
 	DOREPLIFETIME(UCartMovementComponent, ReplicatedLocation);
+	DOREPLIFETIME(UCartMovementComponent, AnimSpeed);
+	DOREPLIFETIME(UCartMovementComponent, AnimbIsPushing);
+	DOREPLIFETIME(UCartMovementComponent, AnimbIsSlowingDown);
+	DOREPLIFETIME(UCartMovementComponent, AnimTurnIntensity);
+	DOREPLIFETIME(UCartMovementComponent, AnimPushDirection);
 }
 
 
@@ -129,10 +134,21 @@ void UCartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                            FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if(IsOwnedByLocalPlayer())
-	{
-		ServerUpdateRepTransformCart(UpdatedComponent->GetComponentLocation() , UpdatedComponent->GetComponentRotation());
-	}
+	
+    
+    if (IsOwnedByLocalPlayer())
+    {
+    	static float TimeSinceLastServerUpdate = 0.0f; // Tracks time since the last update
+    	const float ServerUpdateInterval = 0.05f;      // Interval in seconds between server updates (adjust as needed)
+    
+    	TimeSinceLastServerUpdate += DeltaTime;
+        // Only send updates if enough time has passed since the last update
+        if (TimeSinceLastServerUpdate >= ServerUpdateInterval)
+        {
+            ServerUpdateRepTransformCart(UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentRotation());
+            TimeSinceLastServerUpdate = 0.0f;
+        }
+    }
 	else
 	{
 		// Get current location and rotation

@@ -77,19 +77,19 @@ public:
 	bool bIsReversedPush;
 	FTimerHandle ToppledTimerHandle;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated,BlueprintReadWrite, Category = "Animation")
 	bool AnimbIsPushing;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated,BlueprintReadWrite, Category = "Animation")
 	float AnimTurnIntensity;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated,BlueprintReadWrite, Category = "Animation")
 	float AnimSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated,BlueprintReadWrite, Category = "Animation")
 	bool AnimbIsSlowingDown;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated,BlueprintReadWrite, Category = "Animation")
 	bool AnimPushDirection;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cart Movement")
@@ -126,7 +126,7 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRaiseFrontWheels();
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Unreliable)
 	void ServerUpdateRepTransformCart(const FVector& NewLocation , const FRotator& NewRotation);
 
 	
